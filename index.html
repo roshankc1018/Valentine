@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valentine?</title>
+  <style>
+    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui;background:#ffe6ef;overflow:hidden}
+    .card{width:min(560px,92vw);background:#fff;border-radius:18px;padding:22px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.12)}
+    h1{margin:0 0 6px;font-size:34px}
+    p{margin:0 0 16px;opacity:.8}
+    .stage{position:relative;height:170px}
+    button{border:0;border-radius:999px;font-weight:800;cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);transition:transform .18s ease}
+    #yes{top:18px;background:#ff2f76;color:#fff;width:180px;height:54px;font-size:18px}
+    #no{top:92px;background:#fff;color:#ff2f76;border:2px solid rgba(255,47,118,.35);width:180px;height:54px;font-size:18px}
+    .hint{min-height:20px;margin-top:10px;opacity:.75}
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.35);padding:16px}
+    .modal.open{display:grid}
+    .box{background:#fff;border-radius:16px;padding:18px;text-align:center;width:min(520px,94vw);box-shadow:0 18px 60px rgba(0,0,0,.2)}
+    .box button{position:static;transform:none;background:#ff2f76;color:#fff;padding:12px 16px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Will you be my Valentine? 💘</h1>
+    <p>Choose wisely 😄</p>
+
+    <div class="stage" id="stage">
+      <button id="yes">Yes 💖</button>
+      <button id="no">No</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="box">
+      <h2>YAY!! 🎉💗</h2>
+      <p>Okay so… what’s our first cute date idea? 😄</p>
+      <button id="close">Aww okay 😊</button>
+    </div>
+  </div>
+
+  <script>
+    const yes = document.getElementById("yes");
+    const no = document.getElementById("no");
+    const hint = document.getElementById("hint");
+    const stage = document.getElementById("stage");
+    const modal = document.getElementById("modal");
+    const close = document.getElementById("close");
+
+    const reasons = [
+      "No (are you sure?)",
+      "No (come on 😭)",
+      "No (pls pls pls)",
+      "No (I'll bring snacks 🍫)",
+      "No (last chance!)"
+    ];
+
+    let n = 0, yesScale = 1, noScale = 1;
+
+    function apply() {
+      yes.style.transform = `translateX(-50%) scale(${yesScale})`;
+      no.style.transform  = `translateX(-50%) scale(${noScale})`;
+    }
+
+    yes.onclick = () => modal.classList.add("open");
+    close.onclick = () => modal.classList.remove("open");
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove("open"); };
+
+    no.onclick = () => {
+      n++;
+      if (n <= 5) {
+        yesScale = Math.min(yesScale + 0.18, 2.2);
+        noScale  = Math.max(noScale - 0.12, 0.55);
+        apply();
+        no.textContent = reasons[Math.min(n - 1, reasons.length - 1)];
+        hint.textContent = n === 5 ? "Uh oh… the No button is getting shy 👀" : "Hmm… try again? 😇";
+      }
+    };
+
+    function moveNo() {
+      const r = stage.getBoundingClientRect();
+      const b = no.getBoundingClientRect();
+      const maxX = Math.max(0, r.width - b.width);
+      const maxY = Math.max(0, r.height - b.height);
+      no.style.left = `${Math.random() * maxX}px`;
+      no.style.top  = `${Math
