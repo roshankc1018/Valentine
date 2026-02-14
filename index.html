@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>Valentine?</title>
   <style>
     body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui;background:#ffe6ef;overflow:hidden}
@@ -10,7 +10,15 @@
     h1{margin:0 0 6px;font-size:34px}
     p{margin:0 0 16px;opacity:.8}
     .stage{position:relative;height:170px}
-    button{border:0;border-radius:999px;font-weight:800;cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);transition:transform .18s ease}
+    button{
+      border:0;border-radius:999px;font-weight:800;cursor:pointer;
+      position:absolute;left:50%;
+      transform:translateX(-50%);
+      transition:transform .18s ease,left .12s ease,top .12s ease;
+      touch-action: manipulation; /* 👈 important for mobile */
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+    }
     #yes{top:18px;background:#ff2f76;color:#fff;width:180px;height:54px;font-size:18px}
     #no{top:92px;background:#fff;color:#ff2f76;border:2px solid rgba(255,47,118,.35);width:180px;height:54px;font-size:18px}
     .hint{min-height:20px;margin-top:10px;opacity:.75}
@@ -26,8 +34,8 @@
     <p>Choose wisely 😄</p>
 
     <div class="stage" id="stage">
-      <button id="yes">Yes 💖</button>
-      <button id="no">No</button>
+      <button id="yes" type="button">Yes 💖</button>
+      <button id="no" type="button">No</button>
     </div>
 
     <div class="hint" id="hint"></div>
@@ -36,8 +44,8 @@
   <div class="modal" id="modal">
     <div class="box">
       <h2>YAY!! 🎉💗</h2>
-      <p>Okay so… what’s our first cute date idea? 😄</p>
-      <button id="close">Aww okay 😊</button>
+      <p id="modalText">Just do it. I knew you would say Yes 💖</p>
+      <button id="close" type="button">Aww okay 😊</button>
     </div>
   </div>
 
@@ -64,25 +72,63 @@
       no.style.transform  = `translateX(-50%) scale(${noScale})`;
     }
 
-    yes.onclick = () => modal.classList.add("open");
-    close.onclick = () => modal.classList.remove("open");
-    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove("open"); };
+    function moveNo() {
+      const r = stage.getBoundingClientRect();
+      const b = no.getBoundingClientRect();
 
-    no.onclick = () => {
+      const maxX = Math.max(0, r.width - b.width);
+      const maxY = Math.max(0, r.height - b.height);
+
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      // once it starts running away, position relative to stage
+      no.style.left = `${x}px`;
+      no.style.top  = `${y}px`;
+      no.style.transform = `scale(${noScale})`; // no translateX anymore
+    }
+
+    // YES opens modal
+    yes.addEventListener("click", () => {
+      modal.classList.add("open");
+    });
+
+    // close modal
+    close.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("open");
+    });
+
+    // NO logic (tap)
+    no.addEventListener("click", () => {
       n++;
+
       if (n <= 5) {
         yesScale = Math.min(yesScale + 0.18, 2.2);
         noScale  = Math.max(noScale - 0.12, 0.55);
         apply();
+
         no.textContent = reasons[Math.min(n - 1, reasons.length - 1)];
         hint.textContent = n === 5 ? "Uh oh… the No button is getting shy 👀" : "Hmm… try again? 😇";
       }
-    };
+    });
 
-    function moveNo() {
-      const r = stage.getBoundingClientRect();
+    // After 5 NO clicks, dodge on hover (desktop) and touch (mobile)
+    stage.addEventListener("mousemove", (e) => {
+      if (n < 5) return;
       const b = no.getBoundingClientRect();
-      const maxX = Math.max(0, r.width - b.width);
-      const maxY = Math.max(0, r.height - b.height);
-      no.style.left = `${Math.random() * maxX}px`;
-      no.style.top  = `${Math
+      const dx = e.clientX - (b.left + b.width / 2);
+      const dy = e.clientY - (b.top + b.height / 2);
+      if (Math.hypot(dx, dy) < 120) moveNo();
+    });
+
+    stage.addEventListener("touchstart", () => {
+      if (n < 5) return;
+      moveNo();
+      hint.textContent = "Too slow 😄";
+    }, { passive: true });
+
+    apply();
+  </script>
+</body>
+</html>
